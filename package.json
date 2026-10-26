@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "render": "frapx-render dist"
+    "render": "frapx-render dist",
+    "song:import": "python3 -I scripts/import-song.py",
+    "song:preview": "node scripts/preview-song.mjs"
   },
   "dependencies": {
     "@frapx/fx-passes": "^0.4.0",

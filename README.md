@@ -12,6 +12,12 @@ YouTube Shorts.
 | [NUCLEUS](works/nucleus/) | `music/liminal-vein` |
 | [LIMINAL VEIN, the making](works/liminal-vein-making/) | `music/liminal-vein` |
 
+## Making a song
+
+Songs are made in FL Studio to a fixed shape (8 bars at 120, 128 or 144 BPM)
+and brought in with `pnpm song:import`; `pnpm song:preview` tries one on
+every work. See [docs/song-workflow.md](docs/song-workflow.md).
+
 ## How a work is made
 
 - `music/<song>/` holds the song: `music.wav` (the master), `music.m4a` (what
