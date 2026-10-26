@@ -1,7 +1,6 @@
 import { glsl } from "@frapx/fx-passes";
 import { raymarch, raymarchCamera } from "@frapx/glsl-raymarch";
 import { sdf3d, sdfOps } from "@frapx/glsl-sdf";
-import { LOOP_SECONDS } from "../../music/liminal-vein/song";
 
 // A quiet tunnel of ribs, lit only by a few glowing rings and the rare vein,
 // travelled once per loop: drifting through the song's calm, and in its drop
@@ -11,7 +10,8 @@ import { LOOP_SECONDS } from "../../music/liminal-vein/song";
 // on to the bloom and display passes. u_time moves within the shutter and
 // u_jitter within the pixel, so the mean is motion blurred and anti-aliased
 // without anything else here knowing about samples.
-export const scene = glsl`#version 300 es
+/** The scene pass for a loop of `loopSeconds`. */
+export const scene = (loopSeconds: number): string => glsl`#version 300 es
 precision highp float;
 
 out vec4 fragColor;
@@ -53,7 +53,7 @@ const float TAU = 6.28318530718;
 // Vertical field of view, wide enough that the tall frame still shows the
 // tunnel's sides (about 55° across at 9:16).
 const float FOV = PI * 0.46;
-const float LOOP_SECONDS = ${LOOP_SECONDS.toFixed(1)};
+const float LOOP_SECONDS = ${loopSeconds.toFixed(6)};
 const float LOOP_DISTANCE = 24.0;
 // Everything that varies along z repeats every LOOP_DISTANCE, so when the
 // camera wraps from the end of the loop back to its start, the tunnel ahead

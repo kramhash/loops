@@ -1,15 +1,17 @@
-import { LOOP_SECONDS, musicUrl } from "../../music/liminal-vein/song";
 import { finishPasses } from "../../shared/finish";
+import { selectSong } from "../../shared/songs";
 import { startWork } from "../../shared/work";
-import { songChannels } from "../../music/liminal-vein/rhythm";
 import { tunnelMotion } from "./rhythm";
 import { scene } from "./scene.glsl";
 
+// Plays its own song unless `?song=<name>` picks another (pnpm song:preview).
+const song = selectSong("liminal-vein");
+
 startWork({
   passes: [
-    { name: "scene", fragment: scene, accumulate: true, format: "rgba32f", filter: "nearest" },
-    ...finishPasses({ loopSeconds: LOOP_SECONDS })
+    { name: "scene", fragment: scene(song.shape.seconds), accumulate: true, format: "rgba32f", filter: "nearest" },
+    ...finishPasses({ loopSeconds: song.shape.seconds })
   ],
-  sources: [songChannels, tunnelMotion],
-  music: { url: musicUrl, seconds: LOOP_SECONDS }
+  sources: [...song.channels, tunnelMotion(song.shape)],
+  music: { url: song.musicUrl, seconds: song.shape.seconds }
 });

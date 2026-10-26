@@ -57,7 +57,7 @@ vec4 captionAt(vec2 uv) {
     : ""
 }
 
-const float LOOP_SECONDS = ${loopSeconds.toFixed(4)};
+const float LOOP_SECONDS = ${loopSeconds.toFixed(6)};
 
 float hash31(vec3 p) {
   return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);

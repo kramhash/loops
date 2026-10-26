@@ -1,5 +1,5 @@
 import type { UniformSource } from "@frapx/fx-passes";
-import { songTime } from "../../music/liminal-vein/rhythm";
+import type { SongShape } from "../../shared/song-shape";
 
 /**
  * Which stage of the frame the making-of shows, switching on each bar's
@@ -9,13 +9,13 @@ import { songTime } from "../../music/liminal-vein/rhythm";
  * - `bloomGain`: the bloom, from the fourth bar on
  * - `caption`: which caption panel (0–4) shows
  */
-export const makingStages: UniformSource = {
+export const makingStages = (shape: SongShape): UniformSource => ({
   get(time) {
-    const bar = Math.floor(songTime(time).beat / 4);
+    const bar = Math.floor(shape.songTime(time).beat / 4);
     return {
       stage: bar < 3 ? bar + 1 : 0,
       bloomGain: bar < 3 ? 0 : 1,
       caption: Math.min(bar, 4)
     };
   }
-};
+});

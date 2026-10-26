@@ -1,7 +1,6 @@
 import { glsl } from "@frapx/fx-passes";
 import { raymarch, raymarchCamera } from "@frapx/glsl-raymarch";
 import { sdf2d, sdf3d } from "@frapx/glsl-sdf";
-import { LOOP_SECONDS } from "../../music/liminal-vein/song";
 import { TURN_SECONDS } from "./rhythm";
 
 /** Layers in one loop's height: the column repeats every this many. */
@@ -11,7 +10,8 @@ export const LAYERS = 12;
 // light. The camera climbs it and circles it once per loop. Through the calm
 // the rims glow low; in the drop every kick turns the layers a twelfth of a
 // circle, alternate layers the other way, and the hats light single layers.
-export const scene = glsl`#version 300 es
+/** The scene pass for a loop of `loopSeconds`. */
+export const scene = (loopSeconds: number): string => glsl`#version 300 es
 precision highp float;
 
 out vec4 fragColor;
@@ -43,7 +43,7 @@ ${raymarch}
 const float PI = 3.14159265359;
 const float TAU = 6.28318530718;
 const float FOV = PI * 0.4;
-const float LOOP_SECONDS = ${LOOP_SECONDS.toFixed(4)};
+const float LOOP_SECONDS = ${loopSeconds.toFixed(6)};
 const float LAYERS = ${LAYERS.toFixed(1)};
 const float LAYER_HEIGHT = 0.9;
 const float LOOP_HEIGHT = LAYERS * LAYER_HEIGHT;

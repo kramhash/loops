@@ -1,14 +1,14 @@
 import { glsl } from "@frapx/fx-passes";
 import { raymarch, raymarchCamera } from "@frapx/glsl-raymarch";
 import { sdf3d, sdfOps } from "@frapx/glsl-sdf";
-import { LOOP_SECONDS } from "../../music/liminal-vein/song";
 
 // A single mass of five lobes, smoothly fused, floating in the dark and lit
 // only along its rim. Through the calm it breathes; in the drop every kick
 // splits it apart, a new way each bar (four lobes, a spinning ring, two
 // halves) and along a new axis each kick, and it fuses again before the next
 // beat. The hats light veins under its skin.
-export const scene = glsl`#version 300 es
+/** The scene pass for a loop of `loopSeconds`. */
+export const scene = (loopSeconds: number): string => glsl`#version 300 es
 precision highp float;
 
 out vec4 fragColor;
@@ -38,7 +38,7 @@ ${raymarch}
 const float PI = 3.14159265359;
 const float TAU = 6.28318530718;
 const float FOV = PI * 0.34;
-const float LOOP_SECONDS = ${LOOP_SECONDS.toFixed(4)};
+const float LOOP_SECONDS = ${loopSeconds.toFixed(6)};
 const float MAX_DISTANCE = 16.0;
 const float GOLDEN_ANGLE = 2.39996323;
 
