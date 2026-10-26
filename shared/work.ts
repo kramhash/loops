@@ -1,7 +1,13 @@
 // Everything a work's page shares: the passes on the stage, the song as its
 // clock and its uniforms, the sound button, `?frame=N`, and the render target
 // frapx-render drives. A work supplies its passes and uniform sources.
-import { createPasses, type PassOptions, type PassesInstance, type UniformSource } from "@frapx/fx-passes";
+import {
+  createPasses,
+  type PassOptions,
+  type PassesInstance,
+  type TextureMap,
+  type UniformSource
+} from "@frapx/fx-passes";
 import { registerRenderTarget } from "@frapx/tool-capture";
 import { createSoundtrack } from "./soundtrack";
 import "./stage.css";
@@ -27,6 +33,8 @@ export type WorkOptions = {
   passes: PassOptions[];
   /** Bound in order; a later source wins for the same uniform. */
   sources: UniformSource[];
+  /** Textures every pass that declares them can read (such as captions). */
+  textures?: TextureMap;
   /** The song the browser plays, and the loop's length in seconds. */
   music: { url: string; seconds: number };
   /**
@@ -36,7 +44,7 @@ export type WorkOptions = {
   renderUniforms?: readonly string[];
 };
 
-export const startWork = ({ passes, sources, music, renderUniforms = [] }: WorkOptions): PassesInstance => {
+export const startWork = ({ passes, sources, textures, music, renderUniforms = [] }: WorkOptions): PassesInstance => {
   const stage = document.querySelector<HTMLElement>("[data-stage]")!;
   const soundButton = document.querySelector<HTMLButtonElement>("[data-sound]")!;
   const errorMessage = document.querySelector<HTMLElement>("[data-error]")!;
@@ -66,6 +74,7 @@ export const startWork = ({ passes, sources, music, renderUniforms = [] }: WorkO
     // The time wraps every loop, so the last frame + 1 renders exactly like frame 0.
     accumulation: { samples: SAMPLES, shutter: SHUTTER, fps: FPS, loop: music.seconds },
     passes,
+    ...(textures !== undefined && { textures }),
     uniforms: { quality: quality(), dither: 1 },
     dpr: () => Math.min(window.devicePixelRatio, prefersLightweightRender() ? 1 : 1.5),
     maxDpr: 1.5,

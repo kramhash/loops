@@ -36,6 +36,9 @@ uniform float u_drop;
 uniform float u_travel;
 uniform float u_shape;
 uniform float u_kickRoll;
+// The making-of shows how a frame is built: 0 the finished frame, 1 the
+// shape alone (depth), 2 its normals, 3 the light (bloom is display's).
+uniform float u_stage;
 
 #define FRAPX_RAYMARCH_STEPS 144
 #define FRAPX_AO_SAMPLES 4
@@ -340,8 +343,17 @@ void main() {
 
     float fog = 1.0 - exp(-0.0055 * hit.dist * hit.dist);
     color = mix(shaded, voidColor, fog);
+    if (u_stage > 0.5 && u_stage < 1.5) {
+      color = vec3(0.42 * exp(-0.08 * hit.dist));
+    } else if (u_stage > 1.5 && u_stage < 2.5) {
+      color = (0.5 + 0.5 * n) * 0.4 * exp(-0.05 * hit.dist);
+    }
   }
 
+  if (u_stage > 0.5 && u_stage < 2.5) {
+    fragColor = vec4(hit.dist > 0.0 ? color : vec3(0.0), 1.0);
+    return;
+  }
   color += RING_COLOR * hit.glow.x * ringPower * 0.6
     + VEIN_COLOR * hit.glow.y * veinPower * 0.6;
   fragColor = vec4(color, 1.0);

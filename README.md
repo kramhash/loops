@@ -8,6 +8,9 @@ YouTube Shorts.
 | Work | Song |
 | --- | --- |
 | [LIMINAL VEIN](works/liminal-vein/) | `music/liminal-vein` (128 BPM, 8 bars) |
+| [SPINE](works/spine/) | `music/liminal-vein` |
+| [NUCLEUS](works/nucleus/) | `music/liminal-vein` |
+| [LIMINAL VEIN, the making](works/liminal-vein-making/) | `music/liminal-vein` |
 
 ## How a work is made
 
