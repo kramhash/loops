@@ -5,8 +5,9 @@ import { LOOP_SECONDS } from "../../music/liminal-vein/song";
 
 // A single mass of five lobes, smoothly fused, floating in the dark and lit
 // only along its rim. Through the calm it breathes; in the drop every kick
-// splits it apart along a new axis and it fuses again before the next beat.
-// The hats light veins under its skin.
+// splits it apart, a new way each bar (four lobes, a spinning ring, two
+// halves) and along a new axis each kick, and it fuses again before the next
+// beat. The hats light veins under its skin.
 export const scene = glsl`#version 300 es
 precision highp float;
 
@@ -26,6 +27,8 @@ uniform float u_drop;
 uniform float u_orbit;
 uniform float u_split;
 uniform float u_splitAxis;
+uniform float u_form;
+uniform float u_spin;
 
 ${sdf3d}
 ${sdfOps}
@@ -65,18 +68,37 @@ float folds(vec3 p) {
 
 float massDistance(vec3 p) {
   mat3 frame = splitFrame();
-  float spread = mix(0.12, 0.8, u_drop) * u_split + 0.06 * breath();
+  vec3 q = transpose(frame) * p;
+  float throw = mix(0.12, 0.8, u_drop) * u_split;
+  float spread = throw + 0.06 * breath();
   float radius = 0.62 + 0.03 * breath() + 0.05 * u_pulse * (1.0 - u_drop);
-  // Five lobes: one at the centre, four thrown out along a tetrahedron.
-  float d = frapx_sdSphere(p, radius + 0.12);
-  const vec3 dirs[4] = vec3[4](
-    vec3(1.0, 1.0, 1.0), vec3(-1.0, -1.0, 1.0), vec3(-1.0, 1.0, -1.0), vec3(1.0, -1.0, -1.0)
+  float blend = mix(0.5, 0.28, u_split * u_drop);
+  // Two halves stretch along the axis as they pull apart.
+  float stretch = u_form > 1.5 ? 1.0 + 0.5 * throw : 1.0;
+  q.y /= stretch;
+  float d = frapx_sdSphere(q, radius + 0.12);
+  // Four lobes at rest on a tetrahedron, the same in every form, so a bar can
+  // change form between kicks without a jump. A kick throws them out along
+  // the tetrahedron (bar 5), round a flat ring that spins a quarter turn,
+  // which brings it back to itself (bar 6), or two of them apart along the
+  // axis (bar 7).
+  const vec3 tetra[4] = vec3[4](
+    vec3(0.57735), vec3(-0.57735, -0.57735, 0.57735), vec3(-0.57735, 0.57735, -0.57735), vec3(0.57735, -0.57735, -0.57735)
   );
   for (int i = 0; i < 4; i++) {
-    vec3 c = frame * normalize(dirs[i]) * (0.32 + spread);
-    d = frapx_opSmoothUnion(d, frapx_sdSphere(p - c, radius), mix(0.5, 0.28, u_split * u_drop));
+    vec3 offset = tetra[i] * spread;
+    float size = radius;
+    if (u_form > 1.5) {
+      offset = i < 2 ? vec3(0.0, (i == 0 ? 1.8 : -1.8) * throw, 0.0) : vec3(0.0);
+    } else if (u_form > 0.5) {
+      float a = (float(i) + u_spin) * TAU / 4.0;
+      offset = vec3(cos(a), 0.0, sin(a)) * spread * 1.25;
+      size = radius * mix(1.0, 0.85, u_split);
+    }
+    d = frapx_opSmoothUnion(d, frapx_sdSphere(q - tetra[i] * 0.32 - offset, size), blend);
   }
-  return d + folds(p);
+  // Stretching scales distances up along the axis: scale them back.
+  return d / stretch + folds(p);
 }
 
 float frapx_map(vec3 p) {
@@ -95,7 +117,8 @@ float veins(vec3 p) {
 void main() {
   float orbit = u_reducedMotion > 0.5 ? 0.15 : fract(u_orbit);
   float angle = TAU * orbit;
-  float distance = 4.6 - 0.25 * u_drop - 0.15 * u_drop * u_flash;
+  // Closer in the drop, closer still as the halves pull apart in bar 7.
+  float distance = 4.6 - 0.25 * u_drop - 0.15 * u_drop * u_flash - 0.5 * step(1.5, u_form) * u_split;
   vec3 eye = vec3(distance * sin(angle), 0.55 * sin(TAU * orbit * 2.0), distance * cos(angle));
   mat3 camera = frapx_lookAt(eye, vec3(0.0), 0.0);
   vec3 rd = frapx_cameraRay(gl_FragCoord.xy + u_jitter, u_resolution, camera, FOV);

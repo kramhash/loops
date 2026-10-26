@@ -2,6 +2,7 @@ import { glsl } from "@frapx/fx-passes";
 import { raymarch, raymarchCamera } from "@frapx/glsl-raymarch";
 import { sdf2d, sdf3d } from "@frapx/glsl-sdf";
 import { LOOP_SECONDS } from "../../music/liminal-vein/song";
+import { TURN_SECONDS } from "./rhythm";
 
 /** Layers in one loop's height: the column repeats every this many. */
 export const LAYERS = 12;
@@ -27,7 +28,11 @@ uniform float u_hat;
 uniform float u_energy;
 uniform float u_drop;
 uniform float u_climb;
-uniform float u_turns;
+uniform float u_turnsA;
+uniform float u_waveDone;
+uniform float u_waveSince;
+uniform float u_turnsC;
+uniform float u_spread;
 uniform float u_hatLayer;
 
 ${sdf2d}
@@ -44,6 +49,9 @@ const float LAYER_HEIGHT = 0.9;
 const float LOOP_HEIGHT = LAYERS * LAYER_HEIGHT;
 const float ORBIT_RADIUS = 5.4;
 const float MAX_DISTANCE = 30.0;
+const float TURN_SECONDS = ${TURN_SECONDS.toFixed(4)};
+// How far the layers spring apart in bar 7, as a fraction of their spacing.
+const float SPREAD = 0.45;
 
 const vec3 RIM_COLOR = vec3(0.3, 0.88, 1.0);
 const vec3 VEIN_COLOR = vec3(0.78, 0.14, 1.1);
@@ -80,13 +88,35 @@ float rimPowerOf(float id) {
   return base * (1.0 + 0.2 * u_energy) * (1.0 + beat) + 7.0 * u_hat * hatHere;
 }
 
-// Alternate layers turn opposite ways, a twelfth of a circle per kick.
+float easeOutCubic(float x) {
+  x = clamp(x, 0.0, 1.0);
+  return 1.0 - (1.0 - x) * (1.0 - x) * (1.0 - x);
+}
+
+// The camera's height, which the wave and the spread are measured from.
+float cameraHeight() {
+  return (u_reducedMotion > 0.5 ? 0.3 : fract(u_climb)) * LOOP_HEIGHT;
+}
+
+// How far layer k has turned, in twelfths of a circle (see rhythm.ts): in bar
+// 5 alternate layers oppose, in bar 6 a wave climbs the column, in bar 7
+// every third layer turns back.
 mat2 layerTurn(float k, float id) {
-  float direction = mod(k, 2.0) < 0.5 ? 1.0 : -1.0;
-  float angle = TAU / 6.0 * hash11(id + 7.0) + direction * u_turns * TAU / 12.0;
+  float alternate = mod(k, 2.0) < 0.5 ? 1.0 : -1.0;
+  float third = mod(k, 3.0) < 0.5 ? -1.0 : 1.0;
+  float delay = 0.26 * clamp((k * LAYER_HEIGHT - cameraHeight() + 2.0) / 7.0, 0.0, 1.0);
+  float wave = u_waveDone + (u_waveSince >= 0.0 ? easeOutCubic((u_waveSince - delay) / TURN_SECONDS) : 0.0);
+  float twelfths = alternate * u_turnsA + wave + third * u_turnsC;
+  float angle = TAU / 6.0 * hash11(id + 7.0) + twelfths * TAU / 12.0;
   float c = cos(angle);
   float s = sin(angle);
   return mat2(c, -s, s, c);
+}
+
+// Layer k's height: in bar 7 the layers spring apart about the camera's eye.
+float layerHeight(float k) {
+  float y = k * LAYER_HEIGHT;
+  return y + (y - cameraHeight() - 1.1) * SPREAD * u_spread;
 }
 
 float extrude(float d2, float y, float halfHeight) {
@@ -96,7 +126,7 @@ float extrude(float d2, float y, float halfHeight) {
 
 void layer(vec3 p, float k, inout SceneSample s) {
   float id = layerId(k);
-  vec3 q = p - vec3(0.0, k * LAYER_HEIGHT, 0.0);
+  vec3 q = p - vec3(0.0, layerHeight(k), 0.0);
   q.xz = layerTurn(k, id) * q.xz;
   float radius = layerRadius(id);
   float plate = extrude(abs(frapx_sdHexagon(q.xz, radius - 0.2)) - 0.2, q.y, 0.045);
@@ -121,7 +151,8 @@ void layer(vec3 p, float k, inout SceneSample s) {
 
 SceneSample sampleScene(vec3 p) {
   SceneSample s = SceneSample(1e3, 0.0, 1e3, 0.0, 0.0);
-  float k = floor(p.y / LAYER_HEIGHT + 0.5);
+  float stretch = 1.0 + SPREAD * u_spread;
+  float k = floor((p.y + (cameraHeight() + 1.1) * SPREAD * u_spread) / (LAYER_HEIGHT * stretch) + 0.5);
   layer(p, k - 1.0, s);
   layer(p, k, s);
   layer(p, k + 1.0, s);
@@ -166,7 +197,7 @@ MarchResult marchArtwork(vec3 ro, vec3 rd) {
 
 void main() {
   float climb = u_reducedMotion > 0.5 ? 0.3 : fract(u_climb);
-  float height = climb * LOOP_HEIGHT;
+  float height = cameraHeight();
   float orbit = TAU * climb + 0.6;
   vec3 eye = vec3(ORBIT_RADIUS * cos(orbit), height, ORBIT_RADIUS * sin(orbit));
   vec3 target = vec3(0.0, height + 1.1, 0.0);
