@@ -1,14 +1,14 @@
 import { LOOP_SECONDS, musicUrl } from "../../music/liminal-vein/song";
+import { finishPasses } from "../../shared/finish";
 import { startWork } from "../../shared/work";
-import { BLOOM, bloomPasses } from "./bloom.glsl";
-import { songChannels, tunnelMotion } from "./rhythm";
-import { display, scene } from "./scene.glsl";
+import { songChannels } from "../../music/liminal-vein/rhythm";
+import { tunnelMotion } from "./rhythm";
+import { scene } from "./scene.glsl";
 
 startWork({
   passes: [
     { name: "scene", fragment: scene, accumulate: true, format: "rgba32f", filter: "nearest" },
-    ...bloomPasses("scene"),
-    { name: "display", fragment: display, inputs: ["scene", BLOOM], filter: "nearest" }
+    ...finishPasses({ loopSeconds: LOOP_SECONDS })
   ],
   sources: [songChannels, tunnelMotion],
   music: { url: musicUrl, seconds: LOOP_SECONDS }

@@ -2,7 +2,6 @@ import { glsl } from "@frapx/fx-passes";
 import { raymarch, raymarchCamera } from "@frapx/glsl-raymarch";
 import { sdf3d, sdfOps } from "@frapx/glsl-sdf";
 import { LOOP_SECONDS } from "../../music/liminal-vein/song";
-import { BLOOM, BLOOM_LEVELS } from "./bloom.glsl";
 
 // A quiet tunnel of ribs, lit only by a few glowing rings and the rare vein,
 // travelled once per loop: drifting through the song's calm, and in its drop
@@ -349,41 +348,3 @@ void main() {
 }
 `;
 
-// Bloom, vignette, tone curve and dither, once per frame on the mean of the
-// samples.
-export const display = glsl`#version 300 es
-precision highp float;
-
-in vec2 v_uv;
-out vec4 fragColor;
-
-uniform sampler2D u_scene;
-uniform sampler2D u_${BLOOM};
-uniform float u_frameTime;
-// 1 adds dither against banding in 8-bit output; 16-bit output needs none.
-uniform float u_dither;
-
-const float LOOP_SECONDS = ${LOOP_SECONDS.toFixed(1)};
-const float BLOOM_STRENGTH = 0.5;
-
-float hash31(vec3 p) {
-  return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
-}
-
-// Narkowicz's fit of the ACES filmic curve: deep blacks, and bright light
-// rolls off to white instead of flattening out.
-vec3 aces(vec3 x) {
-  return clamp(x * (2.51 * x + 0.03) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
-}
-
-void main() {
-  vec3 color = texelFetch(u_scene, ivec2(gl_FragCoord.xy), 0).rgb;
-  color += texture(u_${BLOOM}, v_uv).rgb * (BLOOM_STRENGTH / ${BLOOM_LEVELS.toFixed(1)});
-  color *= 1.0 - 0.42 * smoothstep(0.18, 0.82, length(v_uv - 0.5));
-  color = aces(color);
-  // Seeded by the frame within the loop, so the last frame wraps to the first.
-  float phase = fract(u_frameTime / LOOP_SECONDS);
-  color += u_dither * (hash31(vec3(gl_FragCoord.xy, phase * 97.0)) - 0.5) / 255.0;
-  fragColor = vec4(pow(max(color, 0.0), vec3(0.4545)), 1.0);
-}
-`;
