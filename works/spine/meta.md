@@ -10,7 +10,10 @@ Hexagonal layers stacked on a dark spine, their rims the only light. Each bar of
 Raymarched GLSL with frapx, sequenced with vixeq. Code: github.com/kramhash/loops
 Music by kramhash (CC BY 4.0) — use it in your Shorts with credit.
 
-#generativeart #shaders #creativecoding
+#generativeart #shaders #creativecoding #raymarching #glsl
+
+## Tags (set in YouTube Studio)
+raymarching, sdf, signed distance field, glsl, shader, webgl, generative art, frapx, vixeq
 
 ## X
 SPINE — hexagonal layers that turn on every kick, a new way each bar. GLSL (frapx) × sequencer (vixeq).

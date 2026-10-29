@@ -10,7 +10,10 @@ LIMINAL VEIN の 1 フレームができるまで。距離場→法線→光→b
 frapx (WebGL shader runtime) + vixeq (step sequencer). Code: github.com/kramhash/loops
 Music by kramhash (CC BY 4.0).
 
-#shaders #glsl #creativecoding
+#raymarching #sdf #shaders #glsl #creativecoding
+
+## Tags (set in YouTube Studio)
+raymarching, sdf, signed distance field, glsl, shader, webgl, generative art, frapx, vixeq
 
 ## Related video (set in YouTube Studio)
 LIMINAL VEIN
